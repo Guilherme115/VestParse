@@ -1,0 +1,27 @@
+# docker-compose.yml (Corrigido)
+services:
+  mysql:
+    container_name: 'guide-mysql'
+    image: 'mysql:latest'
+    environment:
+      - 'MYSQL_DATABASE=mydatabase'
+      - 'MYSQL_PASSWORD=secret'
+      - 'MYSQL_ROOT_PASSWORD=verysecret'
+      - 'MYSQL_USER=myuser'
+    ports:
+      - '3306:3306'
+    volumes:
+      # Mapeia o volume nomeado 'mysql_data' (definido abaixo)
+      # para o diretório interno do container /var/lib/mysql
+      - mysql_data:/var/lib/mysql
+
+# Definição dos volumes nomeados na raiz do arquivo YAML
+volumes:
+  mysql_data: # <--- Aqui, 'mysql_data' é uma CHAVE, indicando um volume nomeado.
+  # Você pode adicionar opções aqui se precisar, mas para um volume simples,
+  # deixar vazio (com o traço do 'mysql_data' alinhado corretamente) é o suficiente.
+  # Ex: driver: local
+  # Ex: driver_opts:
+  #       type: nfs
+  #       o: addr=10.10.0.2,nolock,hard,rw
+  #       device: ":/var/nfs"
