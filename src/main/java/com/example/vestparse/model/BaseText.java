@@ -1,12 +1,16 @@
 package com.example.vestparse.model;
 
+import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.stereotype.Component;
 
+@Entity
 @Data
-@Component
 public class BaseText {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
     private String title;
     private String content;
-
 }
