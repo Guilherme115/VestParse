@@ -26,15 +26,16 @@ public class QuestionImpl implements QuestionService {
     /* let's to divide ind Array */
 
     @Override
-    public String geSectionText(String text)
-    {
-        if (!text.isEmpty() || text != null) {
+    public String[] geSectionText(String text) {
 
-        String [] sectionsText = new String[];
-        return "";
-    }
+        if (text == null || text.isEmpty()) {
+            throw new IllegalArgumentException("The text can't be Empty");
         }
-}
+        return text.split("\\R");
+    }
 
+
+
+}
 
 
