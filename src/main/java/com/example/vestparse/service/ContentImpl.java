@@ -2,72 +2,54 @@ package com.example.vestparse.service;
 
 import com.example.vestparse.model.*;
 import com.example.vestparse.util.GeminiClient;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
 public class ContentImpl implements ContentService {
 
-    private final QuestionImpl question;
-    private final GeminiClient client;
+    private final ExamParserService parserService;
+    private final ContentGrouperService grouperService;
+    private final GeminiClient geminiClient;
+    private final QuestionsRepository questionRelationRepository;
 
     @Autowired
-    public ContentImpl(QuestionImpl question, GeminiClient client) {
-        this.question = question;
-        this.client = client;
+    public ContentImpl(ExamParserService parserService, ContentGrouperService grouperService, GeminiClient geminiClient, QuestionsRepository questionRelationRepository) {
+        this.parserService = parserService;
+        this.grouperService = grouperService;
+        this.geminiClient = geminiClient;
+        this.questionRelationRepository = questionRelationRepository;
     }
 
-    @Override
-    public List<QuestionRelation> contentList(String[] texts) throws Exception {
-        List<QuestionRelation> listRelation = new ArrayList<>();
+    @Transactional
+    public List<QuestionRelation> processarProvaCompleta(String rawFullText) throws Exception {
 
-        for (String text : texts) {
-            if (text == null || text.isBlank()) {
-                continue;
+        List<QuestionRelation> atomicRelations = parserService.parseText(rawFullText);
+
+        List<QuestionRelation> groupedRelations = grouperService.groupContent(atomicRelations);
+
+        for (QuestionRelation relation : groupedRelations) {
+            if (relation.getBaseText() != null) {
+                String title = geminiClient.setThemeBasic(relation.getBaseText().getContent());
+                relation.getBaseText().setTitle(title);
             }
 
-            QuestionRelation relation = new QuestionRelation();
-
-            if (question.isQuestion(text)) {
-                Pattern pattern = Pattern.compile("^(\\d+)\\s+(.+)$");
-                Matcher matcher = pattern.matcher(text);
-
-                if (matcher.matches()) {
-                    Question model = new Question();
-
-                    int number = Integer.parseInt(matcher.group(1));
-                    String content = matcher.group(2);
-
-                    model.setContent(content);
-                    model.setNumber(number);
-
-                    relation.setQuestion(model);
-
-                    Category classification = client.classificationTypeCategory(content);
-                    relation.setCategory(classification);
-                }
-
-            } else {
-                BaseText baseText = new BaseText();
-                baseText.setContent(text);
-                String title = client.setThemeBasic(baseText.getContent());
-                baseText.setTitle(title);
-
-                relation.setBaseText(baseText);
+            for (Question question : relation.getQuestions()) {
+                String contextText = (relation.getBaseText() != null) ? relation.getBaseText().getContent() : "";
+                Category category = geminiClient.classificationTypeCategory(question.getContent());
+                question.setCategory(category);
             }
-
-            listRelation.add(relation);
         }
 
-        return listRelation;
+        List<QuestionRelation> savedRelations = questionRelationRepository.saveAll(groupedRelations);
+
+        return savedRelations;
     }
 }
-
 
