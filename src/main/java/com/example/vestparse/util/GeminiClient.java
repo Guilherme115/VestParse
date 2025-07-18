@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -14,10 +15,18 @@ import java.net.http.HttpResponse;
 
 @Component
 public class GeminiClient {
-    private static final String API_KEY = "";
-    private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + API_KEY;
+
+    @Value("${api.secret.key}")
+    private String apiKey;
+
+    private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=";
+
     private static final HttpClient client = HttpClient.newHttpClient();
     private static final Gson gson = new Gson();
+
+    private String getApiUrl() {
+        return BASE_URL + apiKey;
+    }
 
     private String sendPromptAndGetResponseText(String prompt) throws Exception {
         JsonObject textPart = new JsonObject();
@@ -35,7 +44,7 @@ public class GeminiClient {
         requestBody.add("contents", contents);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL))
+                .uri(URI.create(getApiUrl()))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
                 .build();
@@ -53,7 +62,7 @@ public class GeminiClient {
                 .trim();
     }
 
-    public  Category classificationTypeCategory(String question) throws Exception {
+    public Category classificationTypeCategory(String question) throws Exception {
         String prompt = "Classifique a seguinte questão em uma das categorias a seguir:\n" +
                 "[MATEMATICA, PORTUGUES, HISTORIA, GEOGRAFIA, CIENCIAS, REDACAO]\n\n" +
                 "Questão: \"" + question + "\"\n\n" +
@@ -63,6 +72,7 @@ public class GeminiClient {
 
         try {
             return Category.valueOf(resposta);
+
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Categoria inválida recebida da IA: " + resposta);
         }
