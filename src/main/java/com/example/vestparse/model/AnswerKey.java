@@ -2,6 +2,8 @@ package com.example.vestparse.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Entity
 @Data
@@ -12,14 +14,12 @@ public class AnswerKey {
     private Long id;
 
     private int questionNumber;
-/*
-- Vai re
- */
-    private String Answer;
+
+    private String answer;
 
     @OneToOne
-    @JoinColumn(name = "question_id")
+    @JoinColumn(name = "question_id", unique = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Question question;
-
-
 }
