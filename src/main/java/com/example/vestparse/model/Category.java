@@ -7,6 +7,8 @@ public enum Category {
         GEOGRAFIA,
         HISTORIA,
         INGLES,
-        REDACAO
+        REDACAO,
+        INTERPRETACAO_DE_TEXTO,
+        OUTRA
     }
 
