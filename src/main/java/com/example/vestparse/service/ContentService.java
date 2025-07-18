@@ -10,6 +10,5 @@ import java.util.List;
 @Service
 public interface ContentService {
 
- List<QuestionRelation> contentList (String[] text) throws Exception;
-
+ public List<QuestionRelation> processarProvaCompleta(String rawFullText) throws Exception;
 }
